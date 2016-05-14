@@ -7,7 +7,7 @@
 -- {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE KindSignatures #-}
 -- {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE UndecidableInstances #-}
+--{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies, TypeOperators, KindSignatures, PolyKinds #-}
 {-# LANGUAGE DataKinds, GADTs #-}
 --{-# LANGUAGE TypeFamilyDependencies #-}
@@ -18,19 +18,19 @@ module Data.HMap.Internal({-Reverse-}Merge, Sort) where
 import GHC.TypeLits
 import Data.Proxy
 
-type family ReverseTC (a :: [ k ]) (res :: [ k ] )   :: ( [k])    where
-    ReverseTC '[] res = res
-    ReverseTC (a ': bs ) res = ReverseTC bs (a ':  res)
+--type family ReverseTC (a :: [ k ]) (res :: [ k ] )   :: ( [k])    where
+--    ReverseTC '[] res = res
+--    ReverseTC (a ': bs ) res = ReverseTC bs (a ':  res)
 
-type family Reverse  (a :: [k]) :: [k]    where
-  Reverse a = ReverseTC a '[]
+--type family Reverse  (a :: [k]) =  (result  :: [k])    where
+--  Reverse a = ReverseTC a '[]
 
 
-type family MergeTC (x :: [(Symbol,k)]) (y :: [(Symbol,k)])  (res :: [(Symbol,k)]) :: [(Symbol,k) ] where
-  MergeTC '[] '[] res = Reverse res
-  MergeTC (a ': as) '[] res = MergeTC as '[] (a ': res)
-  MergeTC '[] bs res = MergeTC bs '[] res-- collapsing this to the other case
-  MergeTC ( '(a,va) ': as) ( '(b,vb) ': bs) res = StableCombine '(a,va) '(b,vb) (CmpSymbol a b) as bs res
+--type family MergeTC (x :: [(Symbol,k)]) (y :: [(Symbol,k)])  (res :: [(Symbol,k)]) :: [(Symbol,k) ] where
+--  MergeTC '[] '[] res = Reverse res
+--  MergeTC (a ': as) '[] res = MergeTC as '[] (a ': res)
+--  MergeTC '[] bs res = MergeTC bs '[] res-- collapsing this to the other case
+--  MergeTC ( '(a,va) ': as) ( '(b,vb) ': bs) res = StableCombine '(a,va) '(b,vb) (CmpSymbol a b) as bs res
 
 type family MergeRec   (x :: [(Symbol,k)]) (y :: [(Symbol,k)])  :: [(Symbol,k) ]  where
    MergeRec as '[]  =  as
@@ -40,34 +40,34 @@ type family MergeRec   (x :: [(Symbol,k)]) (y :: [(Symbol,k)])  :: [(Symbol,k) ]
 
 type family StableCombineRec (a :: k) (b :: k) (s :: Ordering)
       (as :: [k]) (bs :: [k])    :: [k ] where
-  StableCombineRec a b 'EQ as bs  =  TypeError ('Text "can't use duplicate keys")
+  StableCombineRec a b 'EQ as bs res =  TypeError ('Text "can't use duplicate keys")
     --- MergeTC as bs (a ': b ': res)
-  StableCombineRec a b 'GT as bs  = a ':  MergeRec as (b ': bs)
-  StableCombineRec a b 'LT as bs  = b ': MergeRec (a ': as) bs
+  StableCombineRec a b 'GT as bs res = a ':  MergeRec as (b ': bs)
+  StableCombineRec a b 'LT as bs res = b ': MergeRec (a ': as) bs
 
 type family Merge (x :: [(Symbol,k)]) (y :: [(Symbol,k)])   :: [(Symbol,k) ] where
   Merge x y = MergeRec x y {-'[]-}
 
-type family StableCombine (a :: k) (b :: k) (s :: Ordering)
-      (as :: [k]) (bs :: [k]) (res :: [k])   :: [k ] where
-  StableCombine a b 'EQ as bs res =  TypeError ('Text "can't use duplicate keys")
-    --- MergeTC as bs (a ': b ': res)
-  StableCombine a b 'GT as bs res =  MergeTC as (b ': bs) (a ': res)
-  StableCombine a b 'LT as bs res = MergeTC (a ': as) bs (b ': res)
+--type family StableCombine (a :: k) (b :: k) (s :: Ordering)
+--      (as :: [k]) (bs :: [k]) (res :: [k])   :: [k ] where
+--  StableCombine a b 'EQ as bs res =  TypeError ('Text "can't use duplicate keys")
+--    --- MergeTC as bs (a ': b ': res)
+--  StableCombine a b 'GT as bs res =  MergeTC as (b ': bs) (a ': res)
+--  StableCombine a b 'LT as bs res = MergeTC (a ': as) bs (b ': res)
 
 
-type family SplitTC (a :: [k]) (odds :: [k]) (evens :: [k] ) :: ([k],[k])  where
-  SplitTC '[]  odds evens = '(Reverse odds, Reverse evens)
-  SplitTC (a ': b ': rest ) odds evens = SplitTC rest (a ': odds) (b ': evens)
-  SplitTC (a ': '[]) odds evens = '( Reverse (a ': odds), Reverse evens )
+--type family SplitTC (a :: [k]) (odds :: [k]) (evens :: [k] ) :: ([k],[k])  where
+--  SplitTC '[]  odds evens = '(Reverse odds, Reverse evens)
+--  SplitTC (a ': b ': rest ) odds evens = SplitTC rest (a ': odds) (b ': evens)
+--  SplitTC (a ': '[]) odds evens = '( Reverse (a ': odds), Reverse evens )
 
 
-type family Atomize (ls :: [k]) :: [[k]]   where
-  Atomize ls  = AtomizeTC ls '[]
+--type family Atomize (ls :: [k]) :: [[k]]   where
+--  Atomize ls  = AtomizeTC ls '[]
 
-type family AtomizeTC (ls :: [k] ) (res :: [[k]])  :: [[k]] where
-  AtomizeTC '[] res = Reverse res
-  AtomizeTC (a ': rest) res = AtomizeTC rest (( a ': '[]) ': res)
+--type family AtomizeTC (ls :: [k] ) (res :: [[k]])  :: [[k]] where
+--  AtomizeTC '[] res = Reverse res
+--  AtomizeTC (a ': rest) res = AtomizeTC rest (( a ': '[]) ': res)
 
 
 type family Sort (input :: [(Symbol,k)]) :: [(Symbol,k)] where
